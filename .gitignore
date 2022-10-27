@@ -1,0 +1,9 @@
+# Do not track log/data files
+*.root
+*.log
+*.dat
+*.txt
+*.bad
+
+# Do not track the following file that contains sensitive information
+envSetup.sh
