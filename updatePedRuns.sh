@@ -23,9 +23,10 @@ missingRuns=(\
 )
 
 # Set up the environment
+# shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 cd "${workDir}"
-eval `scramv1 runtime -sh`
+eval $(scramv1 runtime -sh)
 
 # Get pedestals
 if [ -f "${dataDir}/${outputFile}" ]; then
@@ -39,7 +40,7 @@ done
 python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
 
 # Update list of uploaded runs
-for run in ${missingRuns[@]}; do
+for run in "${missingRuns[@]}"; do
     echo "${run}" >> "${dataDir}/${referenceFile}"
 done
 

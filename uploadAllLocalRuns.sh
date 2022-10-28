@@ -16,8 +16,9 @@ parameterFile=runs.par
 # Initial setup
 echo -n "Initial setup: "
 cd "${workDir}"
+# shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
-eval `scramv1 runtime -sh`
+eval $(scramv1 runtime -sh)
 echo "ok"
 
 # Get all pedestal runs

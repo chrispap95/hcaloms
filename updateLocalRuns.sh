@@ -24,7 +24,7 @@ usage(){
     echo "-d              dry run option for testing. Runs the code without uploading to DB."
     echo "-h              display this message."
 
-    exit $EXIT
+    exit "$EXIT"
 }
 
 # Process options
@@ -50,21 +50,22 @@ fi
 localRunsList=( "${localRunsDir}/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]_*_DQMIO.root" )
 missingRuns=(\
     $(comm -3\
-        <(echo ${localRunsList[@]} | sed "s| |\n|g" | sed "s|${localRunsDir}/||g")\
+        <(echo "${localRunsList[@]}" | sed "s| |\n|g" | sed "s|${localRunsDir}/||g")\
         <(cat "${dataDir}/${referenceFile}")\
     )\
 )
 
 # Set up the environment
+# shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 cd "${workDir}"
-eval `scramv1 runtime -sh`
+eval $(scramv1 runtime -sh)
 
 # Upload them to the database and update the list of uploaded runs
 # If debugging is on then just print out the command and the new runs
 if [ "$DEBUG" = "false" ]; then
     python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
-    for run in ${missingRuns[@]}; do
+    for run in "${missingRuns[@]}"; do
         echo "${run}" >> "${dataDir}/${referenceFile}"
     done
 else
