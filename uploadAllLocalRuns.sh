@@ -31,11 +31,11 @@ echo -n "Processing ped runs: "
 if [ -f "${dataDir}/${outputFile}" ]; then
     rm "${dataDir}/${outputFile}"
 fi
-for run in ${runsList[@]}; do
+for run in "${runsList[@]}"; do
     # Do something with the runs
     runNumber="$(echo "${run}" | sed "s|${localRunsDir}/DQM_V0001_R000||g")"
     runNumber="${runNumber:0:6}"
-    queryResult="$(sqlplus64 -S ${DB_CMS_RCMS_USR}/${DB_CMS_RCMS_PWD}@cms_rcms @"${sqlQueryFile}" STRING_VALUE CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED "${runNumber}")"
+    queryResult="$(sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms @"${sqlQueryFile}" STRING_VALUE CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED "${runNumber}")"
     rsltLineNum="$(echo -n "${queryResult}" | grep -c '^')"
     queryResult="$(echo "${queryResult}" | tr '\n' '\t')"
     if [ "${rsltLineNum}" = 1 ]; then
@@ -55,11 +55,11 @@ python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
 echo "ok"
 
 # Update list of uploaded runs
-#echo -n "Moving runs to the reference: "
-#for run in ${missingRuns[@]}; do
-#    echo "${run}" >> "${dataDir}/${referenceFile}"
-#done
-#echo "ok"
+echo -n "Moving runs to the reference: "
+for run in "${runsList[@]}"; do
+    echo "${run}" >> "${dataDir}/${referenceFile}"
+done
+echo "ok"
 
 # Return to initial directory
 cd "${curDir}"

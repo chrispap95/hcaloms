@@ -71,7 +71,7 @@ if [ "$DEBUG" = "false" ]; then
 else
     echo "[DEBUG]: python3 scripts/dbuploader.py -f ${outputFile} -p ${parameterFile}"
     echo "[DEBUG]: new runs to be added:"
-    echo "${missingRuns}"
+    echo "${missingRuns[@]}"
 fi
 
 # Return to initial directory

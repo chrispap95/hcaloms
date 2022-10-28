@@ -30,7 +30,7 @@ echo -n "Processing ped runs: "
 if [ -f "${dataDir}/${outputFile}" ]; then
     rm "${dataDir}/${outputFile}"
 fi
-for run in ${pedRunsList[@]}; do
+for run in "${pedRunsList[@]}"; do
     python3 scripts/extractPED.py -f "${run}" -z -t >> "${dataDir}/${outputFile}"
 done
 echo "ok"
@@ -42,7 +42,7 @@ echo "ok"
 
 # Update list of uploaded runs
 echo -n "Moving runs to the reference: "
-for run in ${missingRuns[@]}; do
+for run in "${missingRuns[@]}"; do
     echo "${run}" >> "${dataDir}/${referenceFile}"
 done
 echo "ok"
