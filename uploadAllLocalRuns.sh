@@ -23,7 +23,7 @@ echo "ok"
 
 # Get all pedestal runs
 echo -n "Fetching ped runs: "
-runsList=( "${localRunsDir}/DQM_V0001_R0003[0-9][0-9][0-9][0-9][0-9]__*__DQMIO.root" )
+runsList=( "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][0-9][0-9][0-9]__*__DQMIO.root )
 echo "ok"
 
 # Extract pedestals
