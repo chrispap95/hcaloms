@@ -75,7 +75,7 @@ sqlOut = subprocess.run(
     [
         "sqlplus64",
         "-S",
-        f"{env[DB_CMS_RCMS_USR]}/{env[DB_CMS_RCMS_PWD]}@cms_rcms",
+        f"{env['DB_CMS_RCMS_USR']}/{env['DB_CMS_RCMS_PWD']}@cms_rcms",
         "@/data/hcaldqm/HCALDQM-INSTALLATION/Utilities/WBM/sql_templates/query.sql",
         "STRING_VALUE",
         "CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED",

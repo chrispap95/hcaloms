@@ -26,7 +26,7 @@ missingRuns=(\
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 cd "${workDir}"
-eval $(scramv1 runtime -sh)
+eval "$(scramv1 runtime -sh)"
 
 # Get pedestals
 if [ -f "${dataDir}/${outputFile}" ]; then

@@ -59,7 +59,7 @@ missingRuns=(\
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 cd "${workDir}"
-eval $(scramv1 runtime -sh)
+eval "$(scramv1 runtime -sh)"
 
 # Upload them to the database and update the list of uploaded runs
 # If debugging is on then just print out the command and the new runs

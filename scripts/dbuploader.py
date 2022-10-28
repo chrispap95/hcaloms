@@ -18,7 +18,7 @@ parfile = os.environ["CMSSW_BASE"] + "/src/hcaloms/DBUtils/" + args.parfile
 
 dir_path = os.path.dirname(data_path)
 
-for root, dirs, files in os.walk(dir_path, topdown=True):
+for _root, _dirs, files in os.walk(dir_path, topdown=True):
     if data_file in files:
         if os.stat(data_path + data_file).st_size > 0:
             upload_to_db = subprocess.Popen(
