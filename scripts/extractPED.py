@@ -1,12 +1,9 @@
 import argparse
 import os
-import re
 import subprocess
-from datetime import datetime
 
 import numpy as np
 import ROOT
-
 
 #
 # The following functions can convert bin numbers <-> ieta, iphi for the DQM and the mapping files

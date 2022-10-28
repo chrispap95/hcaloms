@@ -2,7 +2,6 @@ import argparse
 import datetime
 import os
 import subprocess
-import sys
 
 parser = argparse.ArgumentParser(
     description="This script is used to upload analysis data to oracle database"
