@@ -32,7 +32,7 @@ eval "$(scramv1 runtime -sh)"
 if [ -f "${dataDir}/${outputFile}" ]; then
     rm "${dataDir}/${outputFile}"
 fi
-for run in ${missingRuns[@]}; do
+for run in "${missingRuns[@]}"; do
     python3 scripts/extractPED.py -f "${run}" -z -t >> "${dataDir}/${outputFile}"
 done
 

@@ -42,7 +42,7 @@ echo "ok"
 
 # Update list of uploaded runs
 echo -n "Moving runs to the reference: "
-for run in "${missingRuns[@]}"; do
+for run in "${pedRunsList[@]}"; do
     echo "${run}" >> "${dataDir}/${referenceFile}"
 done
 echo "ok"
