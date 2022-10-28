@@ -34,7 +34,7 @@ while getopts "c:dh" opt; do
     ;;
     d) DEBUG="true"
     ;;
-    h | *) 
+    h | *)
     usage 0
     exit 0
     ;;

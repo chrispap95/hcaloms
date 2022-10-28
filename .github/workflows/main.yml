@@ -12,11 +12,11 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
-    - uses: actions/setup-python@v4
-    - uses: pre-commit/action@v3.0.0
-      with:
-        extra_args: --hook-stage manual --all-files
+      - uses: actions/setup-python@v4
+      - uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --hook-stage manual --all-files

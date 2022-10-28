@@ -20,8 +20,6 @@ repos:
     hooks:
       - id: black
 
-
-
   - repo: https://github.com/hadialqattan/pycln
     rev: "v2.1.1"
     hooks:
@@ -74,4 +72,3 @@ repos:
     hooks:
       - id: prettier
         types_or: [yaml, markdown, json]
-
