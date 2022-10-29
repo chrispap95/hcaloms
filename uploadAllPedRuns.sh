@@ -88,7 +88,7 @@ if [ "$DEBUG" = "false" ]; then
         echo "log=${workDir}/DBUtils/${logFile}"
         echo "bad=${workDir}/DBUtils/${badFile}"
         echo "data=${dataDir}/${outputFile}"
-        echo "direct=true" 
+        echo "direct=true"
     } >> "${workDir}/DBUtils/${parameterFile}"
 
     # Upload them to the database
