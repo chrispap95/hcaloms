@@ -15,12 +15,11 @@ parameterFile=pedestals.par
 
 # Compare current list of runs with list of uploaded runs
 pedRunsList=( "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]__PEDESTAL__Commissioning2022__DQMIO.root )
-missingRuns=(\
-    $(comm -3\
-        <(echo "${pedRunsList[@]}" | sed "s| |\n|g" | sed "s|${localRunsDir}/||g")\
-        <(cat "${dataDir}/${referenceFile}")\
-    )\
-)
+IFS=" " read -r -a missingRuns <<< "$(
+    comm -3 \
+        <(echo "${pedRunsList[@]}" | sed "s| |\n|g" | sed "s|${localRunsDir}/||g") \
+        <(cat "${dataDir}/${referenceFile}")
+)"
 
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
     echo "Nothing to update this time! Exiting..."
