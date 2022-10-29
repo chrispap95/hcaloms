@@ -1,17 +1,51 @@
 #!/bin/bash -e
 #
-# Script that will upload all runs
+# uploadAllLocalRuns.sh:
+#     Script that will upload all local runs
 #
 
 # Initial settings
-curDir="$(pwd)"
-workDir=/nfshome0/chpapage/hcaloms/CMSSW_12_4_8/src/hcaloms
-dataDir="${workDir}/data"
+curDir=$(pwd)
+CMSSWVER=CMSSW_12_4_8
+workDir=/nfshome0/chpapage/hcaloms/${CMSSWVER}/src/hcaloms
+dataDir=${workDir}/data
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
 sqlQueryFile="${workDir}/scripts/query.sql"
-referenceFile=runs_uploaded.dat
-outputFile=runsForUpload.dat
-parameterFile=runs.par
+referenceFile=localRuns_uploaded.dat
+outputFile=localRunsForUpload.dat
+parameterFile=localRuns.par
+DEBUG="false"
+
+# Help statement
+usage(){
+    EXIT=$1
+
+    echo -e "uploadAllLocalRuns.sh [options]\n"
+    echo "-c [version]    CMSSW version. (default = ${CMSSWVER})"
+    echo "-d              dry run option for testing. Runs the code without uploading to DB."
+    echo "-h              display this message."
+
+    exit "$EXIT"
+}
+
+# Process options
+while getopts "c:dh" opt; do
+    case "$opt" in
+    c) CMSSWVER=$OPTARG
+    ;;
+    d) DEBUG="true"
+    ;;
+    h | *)
+    usage 0
+    exit 0
+    ;;
+    esac
+done
+
+# Print out all commands if debugging mode is on
+if [[ "${DEBUG}" == "true" ]]; then
+    set -x
+fi
 
 # Initial setup
 echo -n "Initial setup: "
@@ -19,6 +53,8 @@ cd "${workDir}"
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 eval "$(scramv1 runtime -sh)"
+# shellcheck source=/dev/null
+source envSetup.sh
 echo "ok"
 
 # Get all pedestal runs
@@ -26,8 +62,8 @@ echo -n "Fetching ped runs: "
 runsList=( "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][0-9][0-9][0-9]__*__DQMIO.root )
 echo "ok"
 
-# Extract pedestals
-echo -n "Processing ped runs: "
+# Process runs
+echo -n "Processing runs: "
 if [ -f "${dataDir}/${outputFile}" ]; then
     rm "${dataDir}/${outputFile}"
 fi
