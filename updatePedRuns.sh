@@ -13,6 +13,9 @@ localRunsDir=/data/hcaldqm/DQMIO/LOCAL
 referenceFile=pedRuns_uploaded_new.dat
 outputFile=pedsForUpload.dat
 parameterFile=pedestals.par
+ctlFile=pedestals.ctl
+logFile=pedestals.log
+badFile=pedestals.bad
 DEBUG="false"
 
 # Help statement
@@ -76,12 +79,26 @@ for run in "${missingRuns[@]}"; do
 done
 
 if [ "$DEBUG" = "false" ]; then
+    # Generate .par file
+    if [ -f "${workDir}/DBUtils/${parameterFile}" ]; then
+        rm "${workDir}/DBUtils/${parameterFile}"
+    fi
+    echo "userid=${DB_INT2R_USR}/${DB_INT2R_PWD}@int2r" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "control=${workDir}/DBUtils/${ctlFile}" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "log=${workDir}/DBUtils/${logFile}" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "bad=${workDir}/DBUtils/${badFile}" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "data=${dataDir}/${outputFile}" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "direct=true" >> "${workDir}/DBUtils/${parameterFile}"
     # Upload them to the database
     python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
     # Update list of uploaded runs
     for run in "${missingRuns[@]}"; do
         echo "${run}" >> "${dataDir}/${referenceFile}"
     done
+else
+    echo "[DEBUG]: python3 scripts/dbuploader.py -f ${outputFile} -p ${parameterFile}"
+    echo "[DEBUG]: new runs to be added:"
+    echo "${missingRuns[@]}"
 fi
 
 # Return to initial directory

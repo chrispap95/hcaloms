@@ -14,6 +14,9 @@ sqlQueryFile="${workDir}/scripts/query.sql"
 referenceFile=localRuns_uploaded.dat
 outputFile=localRunsForUpload.dat
 parameterFile=localRuns.par
+ctlFile=localRuns.ctl
+logFile=localRuns.log
+badFile=localRuns.bad
 DEBUG="false"
 
 # Help statement
@@ -90,6 +93,17 @@ done
 # Upload them to the database and update the list of uploaded runs
 # If debugging is on then just print out the command and the new runs
 if [ "$DEBUG" = "false" ]; then
+    # Generate .par file
+    if [ -f "${workDir}/DBUtils/${parameterFile}" ]; then
+        rm "${workDir}/DBUtils/${parameterFile}"
+    fi
+    echo "userid=${DB_INT2R_USR}/${DB_INT2R_PWD}@int2r" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "control=${workDir}/DBUtils/${ctlFile}" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "log=${workDir}/DBUtils/${logFile}" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "bad=${workDir}/DBUtils/${badFile}" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "data=${dataDir}/${outputFile}" >> "${workDir}/DBUtils/${parameterFile}"
+    echo "direct=true" >> "${workDir}/DBUtils/${parameterFile}"
+
     python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
     for run in "${missingRuns[@]}"; do
         echo "${run}" >> "${dataDir}/${referenceFile}"
