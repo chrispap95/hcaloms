@@ -1,5 +1,6 @@
 # HCAL OMS page scripts
 
+[![Actions Status][actions-badge]][actions-link]
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 This repository contains scripts for uploading and updating information on OMS regarding HCAL.
