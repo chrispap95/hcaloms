@@ -97,12 +97,14 @@ if [ "$DEBUG" = "false" ]; then
     if [ -f "${workDir}/DBUtils/${parameterFile}" ]; then
         rm "${workDir}/DBUtils/${parameterFile}"
     fi
-    echo "userid=${DB_INT2R_USR}/${DB_INT2R_PWD}@int2r" >> "${workDir}/DBUtils/${parameterFile}"
-    echo "control=${workDir}/DBUtils/${ctlFile}" >> "${workDir}/DBUtils/${parameterFile}"
-    echo "log=${workDir}/DBUtils/${logFile}" >> "${workDir}/DBUtils/${parameterFile}"
-    echo "bad=${workDir}/DBUtils/${badFile}" >> "${workDir}/DBUtils/${parameterFile}"
-    echo "data=${dataDir}/${outputFile}" >> "${workDir}/DBUtils/${parameterFile}"
-    echo "direct=true" >> "${workDir}/DBUtils/${parameterFile}"
+    {
+        echo "userid=${DB_INT2R_USR}/${DB_INT2R_PWD}@int2r"
+        echo "control=${workDir}/DBUtils/${ctlFile}"
+        echo "log=${workDir}/DBUtils/${logFile}"
+        echo "bad=${workDir}/DBUtils/${badFile}"
+        echo "data=${dataDir}/${outputFile}"
+        echo "direct=true" 
+    } >> "${workDir}/DBUtils/${parameterFile}"
 
     python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
     for run in "${missingRuns[@]}"; do
