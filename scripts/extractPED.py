@@ -44,7 +44,6 @@ parser.add_argument(
 parser.add_argument("-d", "--debug", help="Turns debugging on", action="store_true")
 args = parser.parse_args()
 
-inputDir = "/data/hcaldqm/DQMIO/LOCAL/"
 sep = "\t"
 
 # Get environment variables
@@ -55,7 +54,7 @@ fileMap = ROOT.TFile.Open("data/channel_SiPM_size.root")
 
 # Get Run Number from filename
 runNum = args.inputFile[14:20]
-fileIn = ROOT.TFile.Open(inputDir + args.inputFile)
+fileIn = ROOT.TFile.Open(args.inputFile)
 
 outputStr = ""
 outputStr += f"{runNum}{sep}"
