@@ -22,11 +22,18 @@ missingRuns=(\
     )\
 )
 
+if [[ ${#missingRuns[@]} -eq 0 ]]; then
+    echo "Nothing to update this time! Exiting..."
+    exit 0
+fi
+
 # Set up the environment
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 cd "${workDir}"
 eval "$(scramv1 runtime -sh)"
+# shellcheck source=/dev/null
+source envSetup.sh
 
 # Get pedestals
 if [ -f "${dataDir}/${outputFile}" ]; then
