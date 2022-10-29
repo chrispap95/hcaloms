@@ -48,11 +48,8 @@ fi
 
 # Compare current list of runs with list of uploaded runs
 localRunsList=( "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]_*_DQMIO.root )
-IFS=" " read -r -a missingRuns <<< "$(
-    comm -3 \
-        <(echo "${localRunsList[@]}" | sed "s| |\n|g" | sed "s|${localRunsDir}/||g") \
-        <(cat "${dataDir}/${referenceFile}")
-)"
+# Run comm and keep only first column that contains new runs
+readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${localRunsList[@]}") "${dataDir}/${referenceFile}" )
 
 # Set up the environment
 # shellcheck source=/dev/null
