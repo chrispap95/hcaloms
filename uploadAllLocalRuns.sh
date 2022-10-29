@@ -33,7 +33,7 @@ if [ -f "${dataDir}/${outputFile}" ]; then
 fi
 for run in "${runsList[@]}"; do
     # Do something with the runs
-    runNumber="$(echo "${run}" | sed "s|${localRunsDir}/DQM_V0001_R000||g")"
+    runNumber="$(echo "${run//${localRunsDir}\/DQM_V0001_R000/}")"
     runNumber="${runNumber:0:6}"
     queryResult="$(sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms @"${sqlQueryFile}" STRING_VALUE CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED "${runNumber}")"
     rsltLineNum="$(echo -n "${queryResult}" | grep -c '^')"
