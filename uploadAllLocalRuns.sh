@@ -8,15 +8,14 @@
 curDir=$(pwd)
 CMSSWVER=CMSSW_12_4_8
 workDir=/nfshome0/chpapage/hcaloms/${CMSSWVER}/src/hcaloms
-dataDir=${workDir}/data
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-sqlQueryFile="${workDir}/scripts/query.sql"
-referenceFile=localRuns_uploaded.dat
-outputFile=localRunsForUpload.dat
-parameterFile=localRuns.par
-ctlFile=localRuns.ctl
-logFile=localRuns.log
-badFile=localRuns.bad
+sqlQueryFile=${workDir}/scripts/query.sql
+referenceFile=${workDir}/data/localRuns_uploaded.dat
+outputFile=${workDir}/data/localRunsForUpload.dat
+parameterFile=${workDir}/DBUtils/localRuns.par
+ctlFile=${workDir}/DBUtils/localRuns.ctl
+logFile=${workDir}/DBUtils/localRuns.log
+badFile=${workDir}/DBUtils/localRuns.bad
 DEBUG="false"
 
 # Help statement
@@ -67,40 +66,43 @@ echo "ok"
 
 # Process runs
 echo -n "Processing runs: "
-if [ -f "${dataDir}/${outputFile}" ]; then
-    rm "${dataDir}/${outputFile}"
+if [ -f "${outputFile}" ]; then
+    rm "${outputFile}"
 fi
 for run in "${runsList[@]}"; do
     # Do something with the runs
     runNumber="${run//${localRunsDir}\/DQM_V0001_R000/}"
     runNumber="${runNumber:0:6}"
-    queryResult="$(sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms @"${sqlQueryFile}" STRING_VALUE CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED "${runNumber}")"
+    queryResult="$(
+        sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms @"${sqlQueryFile}" \
+          STRING_VALUE CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED "${runNumber}"
+    )"
     rsltLineNum="$(echo -n "${queryResult}" | grep -c '^')"
     queryResult="$(echo "${queryResult}" | tr '\n' '\t')"
     if [ "${rsltLineNum}" = 1 ]; then
         # This is result of the old type (pre run 3)
-        echo -e "${runNumber}\t${queryResult}\t''" >> "${dataDir}/${outputFile}"
+        echo -e "${runNumber}\t${queryResult}\t''" >> "${outputFile}"
     elif [ "${rsltLineNum}" = 3 ]; then
         # This is result of the new type (circa run 3)
         queryResult="$(echo -e "${queryResult}" | sed "s|true	||g" | sed "s|CEST|Europe/Zurich|g" | sed "s|CET|Europe/Zurich|g")"
-        echo -e "${runNumber}\t${queryResult}" >> "${dataDir}/${outputFile}"
+        echo -e "${runNumber}\t${queryResult}" >> "${outputFile}"
     fi
 done
 echo "ok"
 
 if [ "$DEBUG" = "false" ]; then
     # Generate .par file
-    if [ -f "${workDir}/DBUtils/${parameterFile}" ]; then
-        rm "${workDir}/DBUtils/${parameterFile}"
+    if [ -f "${parameterFile}" ]; then
+        rm "${parameterFile}"
     fi
     {
         echo "userid=${DB_INT2R_USR}/${DB_INT2R_PWD}@int2r"
-        echo "control=${workDir}/DBUtils/${ctlFile}"
-        echo "log=${workDir}/DBUtils/${logFile}"
-        echo "bad=${workDir}/DBUtils/${badFile}"
-        echo "data=${dataDir}/${outputFile}"
+        echo "control=${ctlFile}"
+        echo "log=${logFile}"
+        echo "bad=${badFile}"
+        echo "data=${outputFile}"
         echo "direct=true"
-    } >> "${workDir}/DBUtils/${parameterFile}"
+    } >> "${parameterFile}"
 
     # Upload them to the database
     echo -n "Uploading pedestals to DB: "
@@ -110,7 +112,7 @@ if [ "$DEBUG" = "false" ]; then
     # Update list of uploaded runs
     echo -n "Moving runs to the reference: "
     for run in "${runsList[@]}"; do
-        echo "${run}" >> "${dataDir}/${referenceFile}"
+        echo "${run}" >> "${referenceFile}"
     done
     echo "ok"
 fi

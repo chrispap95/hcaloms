@@ -8,14 +8,13 @@
 curDir=$(pwd)
 CMSSWVER=CMSSW_12_4_8
 workDir=/nfshome0/chpapage/hcaloms/${CMSSWVER}/src/hcaloms
-dataDir=${workDir}/data
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-referenceFile=pedRuns_uploaded_new.dat
-outputFile=pedsForUpload.dat
-parameterFile=pedestals.par
-ctlFile=pedestals.ctl
-logFile=pedestals.log
-badFile=pedestals.bad
+referenceFile=${workDir}/data/pedRuns_uploaded.dat
+outputFile=${workDir}/data/pedsForUpload.dat
+parameterFile=${workDir}/DBUtils/pedestals.par
+ctlFile=${workDir}/DBUtils/pedestals.ctl
+logFile=${workDir}/DBUtils/pedestals.log
+badFile=${workDir}/DBUtils/pedestals.bad
 DEBUG="false"
 
 # Help statement
@@ -52,7 +51,7 @@ fi
 # Compare current list of runs with list of uploaded runs
 pedRunsList=( "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]__PEDESTAL__Commissioning2022__DQMIO.root )
 # Run comm and keep only first column that contains new runs
-readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${pedRunsList[@]}") "${dataDir}/${referenceFile}" )
+readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${pedRunsList[@]}") "${referenceFile}" )
 
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
     echo "Nothing to update this time! Exiting..."
@@ -68,34 +67,34 @@ eval "$(scramv1 runtime -sh)"
 source envSetup.sh
 
 # Get pedestals
-if [ -f "${dataDir}/${outputFile}" ]; then
-    rm "${dataDir}/${outputFile}"
+if [ -f "${outputFile}" ]; then
+    rm "${outputFile}"
 fi
 for run in "${missingRuns[@]}"; do
     if [ "$DEBUG" = "true" ]; then
-        echo "[DEBUG]: python3 scripts/extractPED.py -f ${run} -z -t >> ${dataDir}/${outputFile}"
+        echo "[DEBUG]: python3 scripts/extractPED.py -f ${run} -z -t >> ${outputFile}"
     fi
-    python3 scripts/extractPED.py -f "${run}" -z -t >> "${dataDir}/${outputFile}"
+    python3 scripts/extractPED.py -f "${run}" -z -t >> "${outputFile}"
 done
 
 if [ "$DEBUG" = "false" ]; then
     # Generate .par file
-    if [ -f "${workDir}/DBUtils/${parameterFile}" ]; then
-        rm "${workDir}/DBUtils/${parameterFile}"
+    if [ -f "${parameterFile}" ]; then
+        rm "${parameterFile}"
     fi
     {
         echo "userid=${DB_INT2R_USR}/${DB_INT2R_PWD}@int2r"
-        echo "control=${workDir}/DBUtils/${ctlFile}"
-        echo "log=${workDir}/DBUtils/${logFile}"
-        echo "bad=${workDir}/DBUtils/${badFile}"
-        echo "data=${dataDir}/${outputFile}"
+        echo "control=${ctlFile}"
+        echo "log=${logFile}"
+        echo "bad=${badFile}"
+        echo "data=${outputFile}"
         echo "direct=true"
-    } >> "${workDir}/DBUtils/${parameterFile}"
+    } >> "${parameterFile}"
     # Upload them to the database
     python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
     # Update list of uploaded runs
     for run in "${missingRuns[@]}"; do
-        echo "${run}" >> "${dataDir}/${referenceFile}"
+        echo "${run}" >> "${referenceFile}"
     done
 else
     echo "[DEBUG]: python3 scripts/dbuploader.py -f ${outputFile} -p ${parameterFile}"

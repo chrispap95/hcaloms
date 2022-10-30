@@ -8,7 +8,6 @@
 curDir=$(pwd)
 CMSSWVER=CMSSW_12_4_8
 workDir=/nfshome0/chpapage/hcaloms/${CMSSWVER}/src/hcaloms
-dataDir=${workDir}/data
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
 referenceFile=pedRuns_uploaded_new.dat
 outputFile=pedsForUpload.dat
@@ -66,14 +65,14 @@ echo "ok"
 
 # Extract pedestals
 echo -n "Processing ped runs: "
-if [ -f "${dataDir}/${outputFile}" ]; then
-    rm "${dataDir}/${outputFile}"
+if [ -f "${workDir}/data/${outputFile}" ]; then
+    rm "${workDir}/data/${outputFile}"
 fi
 for run in "${pedRunsList[@]}"; do
     if [ "$DEBUG" = "true" ]; then
-        echo -e "\n[DEBUG]: python3 scripts/extractPED.py -f ${run} -z -t >> ${dataDir}/${outputFile}"
+        echo -e "\n[DEBUG]: python3 scripts/extractPED.py -f ${run} -z -t >> ${workDir}/data/${outputFile}"
     fi
-    python3 scripts/extractPED.py -f "${run}" -z -t >> "${dataDir}/${outputFile}"
+    python3 scripts/extractPED.py -f "${run}" -z -t >> "${workDir}/data/${outputFile}"
 done
 echo "ok"
 
@@ -87,7 +86,7 @@ if [ "$DEBUG" = "false" ]; then
         echo "control=${workDir}/DBUtils/${ctlFile}"
         echo "log=${workDir}/DBUtils/${logFile}"
         echo "bad=${workDir}/DBUtils/${badFile}"
-        echo "data=${dataDir}/${outputFile}"
+        echo "data=${workDir}/data/${outputFile}"
         echo "direct=true"
     } >> "${workDir}/DBUtils/${parameterFile}"
 
@@ -99,7 +98,7 @@ if [ "$DEBUG" = "false" ]; then
     # Update list of uploaded runs
     echo -n "Moving runs to the reference: "
     for run in "${pedRunsList[@]}"; do
-        echo "${run}" >> "${dataDir}/${referenceFile}"
+        echo "${run}" >> "${workDir}/data/${referenceFile}"
     done
     echo "ok"
 fi
