@@ -9,12 +9,12 @@ curDir=$(pwd)
 CMSSWVER=CMSSW_12_4_8
 workDir=/nfshome0/chpapage/hcaloms/${CMSSWVER}/src/hcaloms
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-referenceFile=pedRuns_uploaded.dat
-outputFile=pedsForUpload.dat
-parameterFile=pedestals.par
-ctlFile=pedestals.ctl
-logFile=pedestals.log
-badFile=pedestals.bad
+referenceFile=${workDir}/data/pedRuns_uploaded.dat
+outputFile=${workDir}/data/pedsForUpload.dat
+parameterFile=${workDir}/DBUtils/pedestals.par
+ctlFile=${workDir}/DBUtils/pedestals.ctl
+logFile=${workDir}/DBUtils/pedestals.log
+badFile=${workDir}/DBUtils/pedestals.bad
 DEBUG="false"
 
 # Help statement
@@ -65,30 +65,30 @@ echo "ok"
 
 # Extract pedestals
 echo -n "Processing ped runs: "
-if [ -f "${workDir}/data/${outputFile}" ]; then
-    rm "${workDir}/data/${outputFile}"
+if [ -f "${outputFile}" ]; then
+    rm "${outputFile}"
 fi
 for run in "${pedRunsList[@]}"; do
     if [ "$DEBUG" = "true" ]; then
-        echo -e "\n[DEBUG]: python3 scripts/extractPED.py -f ${run} -z -t >> ${workDir}/data/${outputFile}"
+        echo -e "\n[DEBUG]: python3 scripts/extractPED.py -f ${run} -z -t >> ${outputFile}"
     fi
-    python3 scripts/extractPED.py -f "${run}" -z -t >> "${workDir}/data/${outputFile}"
+    python3 scripts/extractPED.py -f "${run}" -z -t >> "${outputFile}"
 done
 echo "ok"
 
 if [ "$DEBUG" = "false" ]; then
     # Generate .par file
-    if [ -f "${workDir}/DBUtils/${parameterFile}" ]; then
-        rm "${workDir}/DBUtils/${parameterFile}"
+    if [ -f "${parameterFile}" ]; then
+        rm "${parameterFile}"
     fi
     {
         echo "userid=${DB_INT2R_USR}/${DB_INT2R_PWD}@int2r"
-        echo "control=${workDir}/DBUtils/${ctlFile}"
-        echo "log=${workDir}/DBUtils/${logFile}"
-        echo "bad=${workDir}/DBUtils/${badFile}"
-        echo "data=${workDir}/data/${outputFile}"
+        echo "control=${ctlFile}"
+        echo "log=${logFile}"
+        echo "bad=${badFile}"
+        echo "data=${outputFile}"
         echo "direct=true"
-    } >> "${workDir}/DBUtils/${parameterFile}"
+    } >> "${parameterFile}"
 
     # Upload them to the database
     echo -n "Uploading pedestals to DB: "
@@ -98,7 +98,7 @@ if [ "$DEBUG" = "false" ]; then
     # Update list of uploaded runs
     echo -n "Moving runs to the reference: "
     for run in "${pedRunsList[@]}"; do
-        echo "${run}" >> "${workDir}/data/${referenceFile}"
+        echo "${run}" >> "${referenceFile}"
     done
     echo "ok"
 fi
