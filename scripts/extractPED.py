@@ -42,6 +42,8 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument("-d", "--debug", help="Turns debugging on", action="store_true")
+parser.add_argument("-c", "--comp", help="Turns comparison with previous runs on", action="store_true")
+parser.add_argument("--runsList", help="Input file for list of previous runs. Used only with option -c.")
 args = parser.parse_args()
 
 sep = "\t"
@@ -164,6 +166,14 @@ for s in sensors.keys():
         if (arrayMean.mean() > 0.0) or (arrayRMS.mean() > 0.0):
             areAllZero = False
         outputStr += f"{arrayMean.mean()}{sep}{arrayRMS.mean()}{sep}"
+
+# Calculate slope vs last "good" run
+# 1: loop over file from end and find first entry with "good" run
+# 2: calculate time diff between that run and current run
+# 3: calculate slopes
+# 4: decide if run is "good"
+
+# Final ouptut
 if not args.suppressZero:
     print(outputStr)
 elif not areAllZero:

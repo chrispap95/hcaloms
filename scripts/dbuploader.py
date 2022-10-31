@@ -10,16 +10,13 @@ parser.add_argument("-f", "--inputfile", help="Input file name", required=True)
 parser.add_argument("-p", "--parfile", help="Parameter file name", required=True)
 args = parser.parse_args()
 
+parfile = args.parfile
+data_file = os.path.basename(args.inputfile)
+data_path = os.path.dirname(args.inputfile)
 
-data_path = os.environ["CMSSW_BASE"] + "/src/hcaloms/data/"
-data_file = args.inputfile
-parfile = os.environ["CMSSW_BASE"] + "/src/hcaloms/DBUtils/" + args.parfile
-
-dir_path = os.path.dirname(data_path)
-
-for _root, _dirs, files in os.walk(dir_path, topdown=True):
+for _root, _dirs, files in os.walk(data_path, topdown=True):
     if data_file in files:
-        if os.stat(data_path + data_file).st_size > 0:
+        if os.stat(data_path + '/' + data_file).st_size > 0:
             upload_to_db = subprocess.Popen(
                 ["sqlldr", "parfile=" + parfile],
                 stdout=subprocess.PIPE,
@@ -34,4 +31,4 @@ for _root, _dirs, files in os.walk(dir_path, topdown=True):
                 log_file.write(str(errors, "utf-8"))
                 log_file.write("\n")
     else:
-        print("Input file doesn't exist!")
+        print("[dbuploader.py]: Input file doesn't exist!")

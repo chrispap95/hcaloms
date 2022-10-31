@@ -4,18 +4,21 @@
 #     Script that will upload all local runs
 #
 
-# Initial settings
+# Get the local setup
 curDir=$(pwd)
-CMSSWVER=CMSSW_12_4_8
-workDir=/nfshome0/chpapage/hcaloms/${CMSSWVER}/src/hcaloms
+#cd "$(dirname "$0")"
+source envSetup.sh
+echo "Setting working directory: ${WORKDIR}"
+
+# Initial settings
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-sqlQueryFile=${workDir}/scripts/query.sql
-referenceFile=${workDir}/data/localRuns_uploaded.dat
-outputFile=${workDir}/data/localRunsForUpload.dat
-parameterFile=${workDir}/DBUtils/localRuns.par
-ctlFile=${workDir}/DBUtils/localRuns.ctl
-logFile=${workDir}/DBUtils/localRuns.log
-badFile=${workDir}/DBUtils/localRuns.bad
+sqlQueryFile=${WORKDIR}/scripts/query.sql
+referenceFile=${WORKDIR}/data/localRuns_uploaded.dat
+outputFile=${WORKDIR}/data/localRunsForUpload.dat
+parameterFile=${WORKDIR}/DBUtils/localRuns.par
+ctlFile=${WORKDIR}/DBUtils/localRuns.ctl
+logFile=${WORKDIR}/DBUtils/localRuns.log
+badFile=${WORKDIR}/DBUtils/localRuns.bad
 DEBUG="false"
 
 # Help statement
@@ -23,7 +26,6 @@ usage(){
     EXIT=$1
 
     echo -e "uploadAllLocalRuns.sh [options]\n"
-    echo "-c [version]    CMSSW version. (default = ${CMSSWVER})"
     echo "-d              dry run option for testing. Runs the code without uploading to DB."
     echo "-h              display this message."
 
@@ -31,10 +33,8 @@ usage(){
 }
 
 # Process options
-while getopts "c:dh" opt; do
+while getopts "dh" opt; do
     case "$opt" in
-    c) CMSSWVER=$OPTARG
-    ;;
     d) DEBUG="true"
     ;;
     h | *)
@@ -51,7 +51,7 @@ fi
 
 # Initial setup
 echo -n "Initial setup: "
-cd "${workDir}"
+cd "${WORKDIR}"
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 eval "$(scramv1 runtime -sh)"
@@ -64,15 +64,28 @@ echo -n "Fetching ped runs: "
 runsList=( "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][0-9][0-9][0-9]__*__DQMIO.root )
 echo "ok"
 
+echo "Will process ${#runsList[@]} runs."
+
 # Process runs
-echo -n "Processing runs: "
+echo "Processing runs: "
 if [ -f "${outputFile}" ]; then
     rm "${outputFile}"
 fi
+# Keeps track of the progress
+i=0 
 for run in "${runsList[@]}"; do
+    # Print out progress
+    if [ $(( ${i} % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then
+        echo "Processed ${i} runs..."
+    fi
+    (( i++ ))
     # Do something with the runs
     runNumber="${run//${localRunsDir}\/DQM_V0001_R000/}"
     runNumber="${runNumber:0:6}"
+    # Skip first runs that don't give query results. Great speedup.
+    if [ ${runNumber} -lt 311915 ]; then
+        continue
+    fi
     queryResult="$(
         sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms @"${sqlQueryFile}" \
           STRING_VALUE CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED "${runNumber}"
@@ -87,8 +100,16 @@ for run in "${runsList[@]}"; do
         queryResult="$(echo -e "${queryResult}" | sed "s|true	||g" | sed "s|CEST|Europe/Zurich|g" | sed "s|CET|Europe/Zurich|g")"
         echo -e "${runNumber}\t${queryResult}" >> "${outputFile}"
     fi
+    # For debugging
+    if [ "$DEBUG" = "true" ] && [ $(( ${i} % 10 )) -eq 0 ] && [ ${i} -gt 0 ]; then
+        echo "[DEBUG]: run=${run}, runNumber=${runNumber}, rsltLineNum=${rsltLineNum}, queryResult=${queryResult}"
+    fi
 done
 echo "ok"
+
+if [ "$DEBUG" = "true" ]; then
+    echo "[DEBUG]: the script would normally upload $(wc -l ${outputFile}) runs to the DB."
+fi
 
 if [ "$DEBUG" = "false" ]; then
     # Generate .par file
@@ -109,8 +130,11 @@ if [ "$DEBUG" = "false" ]; then
     python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
     echo "ok"
 
-    # Update list of uploaded runs
+    # List of uploaded runs will be recreated
     echo -n "Moving runs to the reference: "
+    if [ -f "${referenceFile}" ]; then
+        rm "${referenceFile}"
+    fi
     for run in "${runsList[@]}"; do
         echo "${run}" >> "${referenceFile}"
     done

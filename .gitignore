@@ -4,6 +4,7 @@
 *.dat
 *.txt
 *.bad
+*.par
 
 # Do not track the following file that contains sensitive information
 envSetup.sh
