@@ -177,7 +177,7 @@ for s in sensors.keys():
 # 3: calculate slopes
 # 4: decide if run is "good"
 
-# Final ouptut
+# Final output
 if not args.suppressZero:
     print(outputStr)
 elif not areAllZero:

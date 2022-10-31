@@ -6,7 +6,7 @@
 
 # Get the local setup
 curDir=$(pwd)
-#cd "$(dirname "$0")"
+# shellcheck source=/dev/null
 source envSetup.sh
 echo "Setting working directory: ${WORKDIR}"
 
@@ -75,7 +75,7 @@ fi
 i=0
 for run in "${runsList[@]}"; do
     # Print out progress
-    if [ $(( ${i} % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then
+    if [ $(( i % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then
         echo "Processed ${i} runs..."
     fi
     (( i++ ))
@@ -83,7 +83,7 @@ for run in "${runsList[@]}"; do
     runNumber="${run//${localRunsDir}\/DQM_V0001_R000/}"
     runNumber="${runNumber:0:6}"
     # Skip first runs that don't give query results. Great speedup.
-    if [ ${runNumber} -lt 311915 ]; then
+    if [ "${runNumber}" -lt 311915 ]; then
         continue
     fi
     queryResult="$(
@@ -101,14 +101,14 @@ for run in "${runsList[@]}"; do
         echo -e "${runNumber}\t${queryResult}" >> "${outputFile}"
     fi
     # For debugging
-    if [ "$DEBUG" = "true" ] && [ $(( ${i} % 10 )) -eq 0 ] && [ ${i} -gt 0 ]; then
+    if [ "$DEBUG" = "true" ] && [ $(( i % 10 )) -eq 0 ] && [ ${i} -gt 0 ]; then
         echo "[DEBUG]: run=${run}, runNumber=${runNumber}, rsltLineNum=${rsltLineNum}, queryResult=${queryResult}"
     fi
 done
 echo "ok"
 
 if [ "$DEBUG" = "true" ]; then
-    echo "[DEBUG]: the script would normally upload $(wc -l ${outputFile}) runs to the DB."
+    echo "[DEBUG]: the script would normally upload $(wc -l "${outputFile}") runs to the DB."
 fi
 
 if [ "$DEBUG" = "false" ]; then
