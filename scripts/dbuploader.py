@@ -16,7 +16,7 @@ data_path = os.path.dirname(args.inputfile)
 
 for _root, _dirs, files in os.walk(data_path, topdown=True):
     if data_file in files:
-        if os.stat(data_path + '/' + data_file).st_size > 0:
+        if os.stat(data_path + "/" + data_file).st_size > 0:
             upload_to_db = subprocess.Popen(
                 ["sqlldr", "parfile=" + parfile],
                 stdout=subprocess.PIPE,

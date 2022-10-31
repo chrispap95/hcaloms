@@ -72,7 +72,7 @@ if [ -f "${outputFile}" ]; then
     rm "${outputFile}"
 fi
 # Keeps track of the progress
-i=0 
+i=0
 for run in "${runsList[@]}"; do
     # Print out progress
     if [ $(( ${i} % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then

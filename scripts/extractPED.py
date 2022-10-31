@@ -42,8 +42,12 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument("-d", "--debug", help="Turns debugging on", action="store_true")
-parser.add_argument("-c", "--comp", help="Turns comparison with previous runs on", action="store_true")
-parser.add_argument("--runsList", help="Input file for list of previous runs. Used only with option -c.")
+parser.add_argument(
+    "-c", "--comp", help="Turns comparison with previous runs on", action="store_true"
+)
+parser.add_argument(
+    "--runsList", help="Input file for list of previous runs. Used only with option -c."
+)
 args = parser.parse_args()
 
 sep = "\t"
