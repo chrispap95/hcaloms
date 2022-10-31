@@ -101,7 +101,7 @@ for run in "${runsList[@]}"; do
         echo -e "${runNumber}\t${queryResult}" >> "${outputFile}"
     fi
     # For debugging
-    if [ "$DEBUG" = "true" ] && [ $(( i % 10 )) -eq 0 ] && [ ${i} -gt 0 ]; then
+    if [ "$DEBUG" = "true" ] && [ $(( i % 10 )) -eq 0 ] && [ "${i}" -gt 0 ]; then
         echo "[DEBUG]: run=${run}, runNumber=${runNumber}, rsltLineNum=${rsltLineNum}, queryResult=${queryResult}"
     fi
 done
