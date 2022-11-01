@@ -44,7 +44,7 @@ done
 
 # Initial setup
 echo -n "Initial setup: "
-cd "${workDir}"
+cd "${WORKDIR}"
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 eval "$(scramv1 runtime -sh)"
