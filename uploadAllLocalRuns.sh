@@ -39,15 +39,9 @@ while getopts "dh" opt; do
     ;;
     h | *)
     usage 0
-    exit 0
     ;;
     esac
 done
-
-# Print out all commands if debugging mode is on
-if [[ "${DEBUG}" == "true" ]]; then
-    set -x
-fi
 
 # Initial setup
 echo -n "Initial setup: "
@@ -78,7 +72,7 @@ for run in "${runsList[@]}"; do
     if [ $(( i % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then
         echo "Processed ${i} runs..."
     fi
-    (( i++ ))
+    i=$(( i+1 ))
     # Do something with the runs
     runNumber="${run//${localRunsDir}\/DQM_V0001_R000/}"
     runNumber="${runNumber:0:6}"
