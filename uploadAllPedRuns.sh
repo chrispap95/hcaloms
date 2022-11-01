@@ -17,7 +17,7 @@ outputFile=${WORKDIR}/data/pedsForUpload.dat
 parameterFile=${WORKDIR}/DBUtils/pedestals.par
 ctlFile=${WORKDIR}/DBUtils/pedestals.ctl
 logFile=${WORKDIR}/DBUtils/pedestals.log
-badFile=${workDir}/DBUtils/pedestals.bad
+badFile=${WORKDIR}/DBUtils/pedestals.bad
 DEBUG="false"
 
 # Help statement
