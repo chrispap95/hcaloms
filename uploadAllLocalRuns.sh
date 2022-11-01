@@ -49,8 +49,6 @@ cd "${WORKDIR}"
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
 eval "$(scramv1 runtime -sh)"
-# shellcheck source=/dev/null
-source envSetup.sh
 echo "ok"
 
 # Get all pedestal runs

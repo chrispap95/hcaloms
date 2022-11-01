@@ -4,18 +4,23 @@
 #     This script is to be run as a cron job periodically to check for any new local runs.
 #
 
-# Initial setup
+# Get the local setup
 curDir=$(pwd)
-CMSSWVER=CMSSW_12_4_8
-workDir=/nfshome0/chpapage/hcaloms/${CMSSWVER}/src/hcaloms
+# Move to script location
+cd "$(dirname "$0")"
+# shellcheck source=/dev/null
+source envSetup.sh
+echo "Setting working directory: ${WORKDIR}"
+
+# Initial setup
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-sqlQueryFile=${workDir}/scripts/query.sql
-referenceFile=${workDir}/data/localRuns_uploaded.dat
-outputFile=${workDir}/data/localRunsForUpload.dat
-parameterFile=${workDir}/DBUtils/localRuns.par
-ctlFile=${workDir}/DBUtils/localRuns.ctl
-logFile=${workDir}/DBUtils/localRuns.log
-badFile=${workDir}/DBUtils/localRuns.bad
+sqlQueryFile=${WORKDIR}/scripts/query.sql
+referenceFile=${WORKDIR}/data/localRuns_uploaded.dat
+outputFile=${WORKDIR}/data/localRunsForUpload.dat
+parameterFile=${WORKDIR}/DBUtils/localRuns.par
+ctlFile=${WORKDIR}/DBUtils/localRuns.ctl
+logFile=${WORKDIR}/DBUtils/localRuns.log
+badFile=${WORKDIR}/DBUtils/localRuns.bad
 DEBUG="false"
 
 # Help statement
@@ -23,7 +28,6 @@ usage(){
     EXIT=$1
 
     echo -e "updateLocalRuns.sh [options]\n"
-    echo "-c [version]    CMSSW version. (default = ${CMSSWVER})"
     echo "-d              dry run option for testing. Runs the code without uploading to DB."
     echo "-h              display this message."
 
@@ -31,10 +35,8 @@ usage(){
 }
 
 # Process options
-while getopts "c:dh" opt; do
+while getopts "dh" opt; do
     case "$opt" in
-    c) CMSSWVER=$OPTARG
-    ;;
     d) DEBUG="true"
     ;;
     h | *)
@@ -44,31 +46,24 @@ while getopts "c:dh" opt; do
     esac
 done
 
-# Print out all commands if debugging mode is on
-if [[ "${DEBUG}" == "true" ]]; then
-    set -x
-fi
-
 # Compare current list of runs with list of uploaded runs
-localRunsList=( "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]_*_DQMIO.root )
+localRunsList=( "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][1-9][0-9][0-9]__*__DQMIO.root )
 # Run comm and keep only first column that contains new runs
 readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${localRunsList[@]}") "${referenceFile}" )
 
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
     echo "Nothing to update this time! Exiting..."
     exit 0
+else
+    echo "Will process ${#missingRuns[@]} run(s)."
 fi
 
 # Set up the environment
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
-cd "${workDir}"
 eval "$(scramv1 runtime -sh)"
-# shellcheck source=/dev/null
-source envSetup.sh
 
 # Process runs
-echo -n "Processing runs: "
 if [ -f "${outputFile}" ]; then
     rm "${outputFile}"
 fi
@@ -120,4 +115,3 @@ fi
 
 # Return to initial directory
 cd "${curDir}"
-set +x
