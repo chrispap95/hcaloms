@@ -42,6 +42,12 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument("-d", "--debug", help="Turns debugging on", action="store_true")
+parser.add_argument(
+    "-c", "--comp", help="Turns comparison with previous runs on", action="store_true"
+)
+parser.add_argument(
+    "--runsList", help="Input file for list of previous runs. Used only with option -c."
+)
 args = parser.parse_args()
 
 sep = "\t"
@@ -53,7 +59,7 @@ env = os.environ.copy()
 fileMap = ROOT.TFile.Open("data/channel_SiPM_size.root")
 
 # Get Run Number from filename
-runNum = args.inputFile[14:20]
+runNum = args.inputFile[40:46]
 fileIn = ROOT.TFile.Open(args.inputFile)
 
 outputStr = ""
@@ -164,6 +170,14 @@ for s in sensors.keys():
         if (arrayMean.mean() > 0.0) or (arrayRMS.mean() > 0.0):
             areAllZero = False
         outputStr += f"{arrayMean.mean()}{sep}{arrayRMS.mean()}{sep}"
+
+# Calculate slope vs last "good" run
+# 1: loop over file from end and find first entry with "good" run
+# 2: calculate time diff between that run and current run
+# 3: calculate slopes
+# 4: decide if run is "good"
+
+# Final output
 if not args.suppressZero:
     print(outputStr)
 elif not areAllZero:
