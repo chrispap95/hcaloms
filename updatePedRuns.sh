@@ -10,7 +10,7 @@ curDir=$(pwd)
 cd "$(dirname "$0")"
 # shellcheck source=/dev/null
 source envSetup.sh
-echo "Setting working directory: ${WORKDIR}"
+echo "[updatePedRuns.sh]: Setting working directory: ${WORKDIR}"
 
 # Initial setup
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
@@ -47,13 +47,13 @@ done
 # Compare current list of runs with list of uploaded runs
 pedRunsList=( "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]__PEDESTAL__Commissioning2022__DQMIO.root )
 # Run comm and keep only first column that contains new runs
-readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${pedRunsList[@]}") "${referenceFile}" )
+readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${pedRunsList[@]}") <(sort "${referenceFile}") )
 
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
-    echo "Nothing to update this time! Exiting..."
+    echo "[updatePedRuns.sh]: Nothing to update this time! Exiting..."
     exit 0
 else
-    echo "Will process ${#missingRuns[@]} run(s)."
+    echo "[updatePedRuns.sh]: Will process ${#missingRuns[@]} run(s)."
 fi
 
 # Set up the environment
