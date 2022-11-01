@@ -59,7 +59,7 @@ env = os.environ.copy()
 fileMap = ROOT.TFile.Open("data/channel_SiPM_size.root")
 
 # Get Run Number from filename
-runNum = args.inputFile[14:20]
+runNum = args.inputFile[40:46]
 fileIn = ROOT.TFile.Open(args.inputFile)
 
 outputStr = ""
