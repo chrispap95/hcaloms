@@ -41,7 +41,6 @@ while getopts "dh" opt; do
     ;;
     h | *)
     usage 0
-    exit 0
     ;;
     esac
 done
