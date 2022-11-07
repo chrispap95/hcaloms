@@ -45,7 +45,7 @@ while getopts "dh" opt; do
 done
 
 # Compare current list of runs with list of uploaded runs
-pedRunsList=( 
+pedRunsList=(
     "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]__PEDESTAL__Commissioning2022__DQMIO.root
 )
 # Run comm and keep only first column that contains new runs

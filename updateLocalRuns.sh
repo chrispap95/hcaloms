@@ -48,8 +48,8 @@ done
 # Compare current list of runs with list of uploaded runs
 localRunsList=( "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][1-9][0-9][0-9]__*__DQMIO.root )
 # Run comm and keep only first column that contains new runs
-readarray -t missingRuns < <( 
-    comm -23 <(printf "%s\n" "${localRunsList[@]}") <(sort "${referenceFile}") 
+readarray -t missingRuns < <(
+    comm -23 <(printf "%s\n" "${localRunsList[@]}") <(sort "${referenceFile}")
 )
 
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
