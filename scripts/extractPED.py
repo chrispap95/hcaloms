@@ -79,9 +79,7 @@ sqlOut = subprocess.run(
         "sqlplus64",
         "-S",
         f"{env['DB_CMS_RCMS_USR']}/{env['DB_CMS_RCMS_PWD']}@cms_rcms",
-        "@/data/hcaldqm/HCALDQM-INSTALLATION/Utilities/WBM/sql_templates/query.sql",
-        "STRING_VALUE",
-        "CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED",
+        f"@{env['WORKDIR']}/scripts/query.sql",
         runNum,
     ],
     capture_output=True,
@@ -172,7 +170,7 @@ for s in sensors.keys():
         outputStr += f"{arrayMean.mean()}{sep}{arrayRMS.mean()}{sep}"
 
 # Calculate slope vs last "good" run
-# 1: loop over file from end and find first entry with "good" run
+# 1: loop over reference file from end and find first entry with "good" run
 # 2: calculate time diff between that run and current run
 # 3: calculate slopes
 # 4: decide if run is "good"
