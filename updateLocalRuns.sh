@@ -48,7 +48,9 @@ done
 # Compare current list of runs with list of uploaded runs
 localRunsList=( "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][1-9][0-9][0-9]__*__DQMIO.root )
 # Run comm and keep only first column that contains new runs
-readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${localRunsList[@]}") <(sort "${referenceFile}") )
+readarray -t missingRuns < <(
+    comm -23 <(printf "%s\n" "${localRunsList[@]}") <(sort "${referenceFile}")
+)
 
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
     echo "[updateLocalRuns.sh]: Nothing to update this time! Exiting..."
@@ -71,17 +73,19 @@ for run in "${missingRuns[@]}"; do
     runNumber="${run//${localRunsDir}\/DQM_V0001_R000/}"
     runNumber="${runNumber:0:6}"
     queryResult="$(
-        sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms @"${sqlQueryFile}" \
-          STRING_VALUE CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED "${runNumber}"
+        sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms \
+            @"${sqlQueryFile}" "${runNumber}"
     )"
     rsltLineNum="$(echo -n "${queryResult}" | grep -c '^')"
     queryResult="$(echo "${queryResult}" | tr '\n' '\t')"
     if [ "${rsltLineNum}" = 1 ]; then
         # This is result of the old type (pre run 3)
         echo -e "${runNumber}\t${queryResult}\t''" >> "${outputFile}"
-    elif [ "${rsltLineNum}" = 3 ]; then
+    elif [ "${rsltLineNum}" = 2 ]; then
         # This is result of the new type (circa run 3)
-        queryResult="$(echo -e "${queryResult}" | sed "s|true	||g" | sed "s|CEST|Europe/Zurich|g" | sed "s|CET|Europe/Zurich|g")"
+        queryResult="$(
+            echo -e "${queryResult}" | sed "s|CEST|Europe/Zurich|g" | sed "s|CET|Europe/Zurich|g"
+        )"
         echo -e "${runNumber}\t${queryResult}" >> "${outputFile}"
     fi
 done
