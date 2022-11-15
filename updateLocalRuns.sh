@@ -12,6 +12,9 @@ cd "$(dirname "$0")"
 source envSetup.sh
 echo "[updateLocalRuns.sh]: Setting working directory: ${WORKDIR}"
 
+SCRIPT_LOG=${WORKDIR}/cron_locals.log
+
+
 # Initial setup
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
 sqlQueryFile=${WORKDIR}/scripts/query.sql
