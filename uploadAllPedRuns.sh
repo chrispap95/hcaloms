@@ -52,7 +52,7 @@ echo "ok"
 
 # Get all pedestal runs
 echo -n "Fetching ped runs: "
-pedRunsList=( 
+pedRunsList=(
     "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]__PEDESTAL__Commissioning2022__DQMIO.root
 )
 echo "ok"
