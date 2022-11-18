@@ -38,6 +38,7 @@ usage(){
     echo "-d              dry run option for testing. Runs the code without uploading to DB."
     echo "-h              display this message."
 
+    SCRIPTEXIT
     exit "$EXITUSAGE"
 }
 
@@ -61,6 +62,7 @@ readarray -t missingRuns < <(
 
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
     INFO "Nothing to update this time! Exiting..."
+    SCRIPTEXIT
     exit 0
 else
     INFO "Will process ${#missingRuns[@]} run(s)."
