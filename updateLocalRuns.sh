@@ -12,7 +12,7 @@ cd "$(dirname "$0")"
 source envSetup.sh
 
 # Setup logging
-SCRIPT_LOG=${WORKDIR}/cron_locals.log
+export SCRIPT_LOG=${WORKDIR}/cron_locals.log
 # shellcheck source=/dev/null
 source logger.sh
 
@@ -99,7 +99,7 @@ done
 
 # Upload them to the database and update the list of uploaded runs
 # If debugging is on then just print out the command and the new runs
-if [ "$DEBUG" = "false" ]; then
+if [ "$dbgOn" = "false" ]; then
     # Generate .par file
     if [ -f "${parameterFile}" ]; then
         rm "${parameterFile}"
