@@ -10,7 +10,14 @@ curDir=$(pwd)
 cd "$(dirname "$0")"
 # shellcheck source=/dev/null
 source envSetup.sh
-echo "[updateLocalRuns.sh]: Setting working directory: ${WORKDIR}"
+
+# Setup logging
+export SCRIPT_LOG=${WORKDIR}/cron_locals.log
+# shellcheck source=/dev/null
+source logger.sh
+
+SCRIPTENTRY
+INFO "Setting working directory: ${WORKDIR}"
 
 # Initial setup
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
@@ -21,23 +28,24 @@ parameterFile=${WORKDIR}/DBUtils/localRuns.par
 ctlFile=${WORKDIR}/DBUtils/localRuns.ctl
 logFile=${WORKDIR}/DBUtils/localRuns.log
 badFile=${WORKDIR}/DBUtils/localRuns.bad
-DEBUG="false"
+dbgOn="false"
 
 # Help statement
 usage(){
-    EXIT=$1
+    EXITUSAGE=$1
 
     echo -e "updateLocalRuns.sh [options]\n"
     echo "-d              dry run option for testing. Runs the code without uploading to DB."
     echo "-h              display this message."
 
-    exit "$EXIT"
+    SCRIPTEXIT
+    exit "$EXITUSAGE"
 }
 
 # Process options
 while getopts "dh" opt; do
     case "$opt" in
-    d) DEBUG="true"
+    d) dbgOn="true"
     ;;
     h | *)
     usage 0
@@ -53,10 +61,11 @@ readarray -t missingRuns < <(
 )
 
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
-    echo "[updateLocalRuns.sh]: Nothing to update this time! Exiting..."
+    INFO "Nothing to update this time! Exiting..."
+    SCRIPTEXIT
     exit 0
 else
-    echo "[updateLocalRuns.sh]: Will process ${#missingRuns[@]} run(s)."
+    INFO "Will process ${#missingRuns[@]} run(s)."
 fi
 
 # Set up the environment
@@ -92,7 +101,7 @@ done
 
 # Upload them to the database and update the list of uploaded runs
 # If debugging is on then just print out the command and the new runs
-if [ "$DEBUG" = "false" ]; then
+if [ "$dbgOn" = "false" ]; then
     # Generate .par file
     if [ -f "${parameterFile}" ]; then
         rm "${parameterFile}"
@@ -111,10 +120,11 @@ if [ "$DEBUG" = "false" ]; then
         echo "${run}" >> "${referenceFile}"
     done
 else
-    echo "[DEBUG]: python3 scripts/dbuploader.py -f ${outputFile} -p ${parameterFile}"
-    echo "[DEBUG]: new runs to be added:"
-    echo "${missingRuns[@]}"
+    DEBUG "python3 scripts/dbuploader.py -f ${outputFile} -p ${parameterFile}"
+    DEBUG "new runs to be added:"
+    DEBUG "${missingRuns[@]}"
 fi
 
 # Return to initial directory
 cd "${curDir}"
+SCRIPTEXIT
