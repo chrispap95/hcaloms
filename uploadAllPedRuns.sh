@@ -52,11 +52,14 @@ echo "ok"
 
 # Get all pedestal runs
 echo -n "Fetching ped runs: "
-pedRunsList=( "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]__PEDESTAL__Commissioning2022__DQMIO.root )
+pedRunsList=(
+    "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][0-9][0-9][0-9]__PEDESTAL__Commissioning202[2-5]__DQMIO.root
+)
 echo "ok"
 
 # Print number of runs to process
-echo "Will process ${#pedRunsList[@]} runs."
+TOTAL_STEPS=${#pedRunsList[@]}
+echo "Will process ${TOTAL_STEPS} runs."
 
 # Extract pedestals
 echo "Processing ped runs: "
@@ -64,19 +67,33 @@ if [ -f "${outputFile}" ]; then
     rm "${outputFile}"
 fi
 # Keeps track of the progress
+echo -ne 'Progress: ['
 i=0
 for run in "${pedRunsList[@]}"; do
     # Print out progress
-    if [ $(( i % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then
-        echo "Processed ${i} runs..."
-    fi
+    #if [ $(( i % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then
+    #    echo "Processed ${i} runs..."
+    #fi
+
+    # Make a progress bar
+    PERCENT=$((100 * (i + 1) / TOTAL_STEPS))
+    echo -ne '\rProgress: ['
+    # Add the progress bar with '#' symbols
+    BAR_SIZE=100
+    for ((j = 0; j < ((i + 1) * BAR_SIZE / TOTAL_STEPS); j++)); do echo -ne '#'; done
+    # Fill the rest of the bar with spaces
+    for ((j = ((i + 1) * BAR_SIZE / TOTAL_STEPS); j < BAR_SIZE; j++)); do echo -ne ' '; done
+    # Add the percentage and close the progress bar
+    echo -ne "] $PERCENT%"
     i=$(( i+1 ))
+
+    # Run the pedestal script
     if [ "$DEBUG" = "true" ]; then
         echo "[DEBUG]: python3 scripts/extractPED.py -f ${run} -z -t >> ${outputFile}"
     fi
     python3 scripts/extractPED.py -f "${run}" -z -t >> "${outputFile}"
 done
-echo "ok"
+echo -e "\nDone!"
 
 if [ "$DEBUG" = "false" ]; then
     # Generate .par file

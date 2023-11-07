@@ -79,22 +79,25 @@ for run in "${runsList[@]}"; do
         continue
     fi
     queryResult="$(
-        sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms @"${sqlQueryFile}" \
-          STRING_VALUE CMS.HCAL_LEVEL_1:LOCAL_RUNKEY_SELECTED "${runNumber}"
+        sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms \
+            @"${sqlQueryFile}" "${runNumber}"
     )"
     rsltLineNum="$(echo -n "${queryResult}" | grep -c '^')"
     queryResult="$(echo "${queryResult}" | tr '\n' '\t')"
     if [ "${rsltLineNum}" = 1 ]; then
         # This is result of the old type (pre run 3)
         echo -e "${runNumber}\t${queryResult}\t''" >> "${outputFile}"
-    elif [ "${rsltLineNum}" = 3 ]; then
+    elif [ "${rsltLineNum}" = 2 ]; then
         # This is result of the new type (circa run 3)
-        queryResult="$(echo -e "${queryResult}" | sed "s|true	||g" | sed "s|CEST|Europe/Zurich|g" | sed "s|CET|Europe/Zurich|g")"
+        queryResult="$(
+            echo -e "${queryResult}" | sed "s|CEST|Europe/Zurich|g" | sed "s|CET|Europe/Zurich|g"
+        )"
         echo -e "${runNumber}\t${queryResult}" >> "${outputFile}"
     fi
     # For debugging
     if [ "$DEBUG" = "true" ] && [ $(( i % 10 )) -eq 0 ] && [ "${i}" -gt 0 ]; then
-        echo "[DEBUG]: run=${run}, runNumber=${runNumber}, rsltLineNum=${rsltLineNum}, queryResult=${queryResult}"
+        echo -n "[DEBUG]: run=${run}, runNumber=${runNumber}, "
+        echo "rsltLineNum=${rsltLineNum}, queryResult=${queryResult}"
     fi
 done
 echo "ok"
