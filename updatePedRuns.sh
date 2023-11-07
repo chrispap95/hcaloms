@@ -54,7 +54,7 @@ done
 
 # Compare current list of runs with list of uploaded runs
 pedRunsList=(
-    "${localRunsDir}"/DQM_V0001_R000[1-9][0-9][0-9][1-9][0-9][0-9]__PEDESTAL__Commissioning2022__DQMIO.root
+    "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][0-9][0-9][0-9]__PEDESTAL__Commissioning202[2-5]__DQMIO.root
 )
 # Run comm and keep only first column that contains new runs
 readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${pedRunsList[@]}") <(sort "${referenceFile}") )

@@ -85,7 +85,7 @@ sqlOut = subprocess.run(
     capture_output=True,
 )
 sqlOut = sqlOut.stdout.decode("utf-8")
-timeStamp = sqlOut.split("\n")[2]
+timeStamp = sqlOut.split("\n")[1]
 timeStamp = timeStamp[: timeStamp.rfind(" ", 3)]
 if args.timeStamp:
     outputStr += f"'{timeStamp} Europe/Zurich'{sep}"
