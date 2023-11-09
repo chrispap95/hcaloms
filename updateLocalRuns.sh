@@ -2,7 +2,7 @@
 #
 # updatePedRuns.sh:
 #     This script will check if there are new pedestal runs and update the database if necessary.
-#     A CMSSW envirnment should be already set up before running.
+#     A CMSSW environment should be already set up before running.
 #     Input:
 #         - $1: working directory
 #         - $2: log file
