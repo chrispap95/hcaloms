@@ -1,24 +1,34 @@
 #!/bin/bash -e
 #
-# uploadAllLocalRuns.sh:
-#     Script that will upload all local runs
+# uploadAllPedRuns.sh
+#     This script will upload all pedestals runs to the database.
+#     Input:
+#         - $1: CMSSW version
 #
 
-# Get the local setup
-curDir=$(pwd)
+# Set the input variables
+CMSSW_VERSION="$1"
+LOG_DIR="$2"
+
+# Get the directories of interest
+CURRENT_DIR=$(pwd)
+export WORK_DIR="${CURRENT_DIR}"
+SCRIPT_DIR="$(dirname "$0")"
+cd "${SCRIPT_DIR}"
+
+# Set up the environment
 # shellcheck source=/dev/null
 source envSetup.sh
-echo "Setting working directory: ${WORKDIR}"
 
 # Initial settings
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-sqlQueryFile=${WORKDIR}/scripts/query.sql
-referenceFile=${WORKDIR}/data/localRuns_uploaded.dat
-outputFile=${WORKDIR}/data/localRunsForUpload.dat
-parameterFile=${WORKDIR}/DBUtils/localRuns.par
-ctlFile=${WORKDIR}/DBUtils/localRuns.ctl
-logFile=${WORKDIR}/DBUtils/localRuns.log
-badFile=${WORKDIR}/DBUtils/localRuns.bad
+sqlQueryFile=${SCRIPT_DIR}/scripts/query.sql
+referenceFile=${SCRIPT_DIR}/data/localRuns_uploaded.dat
+outputFile=${SCRIPT_DIR}/data/localRunsForUpload.dat
+parameterFile=${SCRIPT_DIR}/DBUtils/localRuns.par
+ctlFile=${SCRIPT_DIR}/DBUtils/localRuns.ctl
+logFile=${SCRIPT_DIR}/DBUtils/localRuns.log
+badFile=${SCRIPT_DIR}/DBUtils/localRuns.bad
 DEBUG="false"
 
 # Help statement
@@ -43,12 +53,15 @@ while getopts "dh" opt; do
     esac
 done
 
-# Initial setup
-echo -n "Initial setup: "
-cd "${WORKDIR}"
+# Set up CMSSW
+echo -n "Setting up CMSSW: "
+cd "${SCRIPT_DIR}"
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
+CMSSW_PATH="../../CMSSW/${CMSSW_VERSION}"
+cd "${CMSSW_PATH}/src"
 eval "$(scramv1 runtime -sh)"
+cd "${CURRENT_DIR}"
 echo "ok"
 
 # Get all pedestal runs
@@ -56,6 +69,8 @@ echo -n "Fetching ped runs: "
 runsList=( "${localRunsDir}"/DQM_V0001_R0003[0-9][0-9][0-9][0-9][0-9]__*__DQMIO.root )
 echo "ok"
 
+# Print number of runs to process
+TOTAL_STEPS=${#runsList[@]}
 echo "Will process ${#runsList[@]} runs."
 
 # Process runs
@@ -63,14 +78,34 @@ echo "Processing runs: "
 if [ -f "${outputFile}" ]; then
     rm "${outputFile}"
 fi
-# Keeps track of the progress
+
+# Make a progress bar that keeps track of the progress
+BAR_LENGTH=100
+LAST_PERCENT=0
+echo -ne 'Progress: ['
+printf '%*s' $BAR_LENGTH
+echo -ne "] 0%"
 i=0
 for run in "${runsList[@]}"; do
-    # Print out progress
-    if [ $(( i % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then
-        echo "Processed ${i} runs..."
+    # Update the progress bar only when the percentage changes
+    PERCENT=$((100 * (i + 1) / TOTAL_STEPS))
+    if (( PERCENT != LAST_PERCENT )); then
+        # Calculate how many '#' characters to print
+        HASHES=$((BAR_LENGTH * (i + 1) / TOTAL_STEPS))
+
+        # Prepare the progress bar string
+        progressBar=""
+        for ((j = 0; j < HASHES; j++)); do
+            progressBar+="#"
+        done
+
+        # Print the progress bar
+        printf '\rProgress: [%-*s] %d%%' "$BAR_LENGTH" "$progressBar" "$PERCENT"
+        
+        LAST_PERCENT=$PERCENT
     fi
     i=$(( i+1 ))
+
     # Do something with the runs
     runNumber="${run//${localRunsDir}\/DQM_V0001_R000/}"
     runNumber="${runNumber:0:6}"
@@ -82,7 +117,11 @@ for run in "${runsList[@]}"; do
         sqlplus64 -S "${DB_CMS_RCMS_USR}"/"${DB_CMS_RCMS_PWD}"@cms_rcms \
             @"${sqlQueryFile}" "${runNumber}"
     )"
-    rsltLineNum="$(echo -n "${queryResult}" | grep -c '^')"
+    if [[ -z "${queryResult}" ]]; then
+        rsltLineNum=0
+    else
+        rsltLineNum="$(echo -n "${queryResult}" | grep -c '^')"
+    fi
     queryResult="$(echo "${queryResult}" | tr '\n' '\t')"
     if [ "${rsltLineNum}" = 1 ]; then
         # This is result of the old type (pre run 3)
@@ -100,7 +139,7 @@ for run in "${runsList[@]}"; do
         echo "rsltLineNum=${rsltLineNum}, queryResult=${queryResult}"
     fi
 done
-echo "ok"
+echo -e "\nDone!"
 
 if [ "$DEBUG" = "true" ]; then
     echo "[DEBUG]: the script would normally upload $(wc -l "${outputFile}") runs to the DB."
@@ -121,8 +160,9 @@ if [ "$DEBUG" = "false" ]; then
     } >> "${parameterFile}"
 
     # Upload them to the database
-    echo -n "Uploading pedestals to DB: "
-    python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
+    DB_LOG_FILE="${LOG_DIR}/dbuploader.log"
+    echo -n "Uploading runs to DB: "
+    python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}" -l "${DB_LOG_FILE}"
     echo "ok"
 
     # List of uploaded runs will be recreated
@@ -137,5 +177,5 @@ if [ "$DEBUG" = "false" ]; then
 fi
 
 # Return to initial directory
-cd "${curDir}"
+cd "${CURRENT_DIR}"
 echo "All done!"

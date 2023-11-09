@@ -1,32 +1,42 @@
 #!/bin/bash -e
 #
 # updatePedRuns.sh:
-#     This script is to be run as a cron job periodically to check for any new pedestal runs.
+#     This script will check if there are new pedestal runs and update the database if necessary.
+#     A CMSSW envirnment should be already set up before running.
+#     Input:
+#         - $1: working directory
+#         - $2: log file
 #
 
-# Get the local setup
-curDir=$(pwd)
+# Input section
+WORK_DIR="$1"
+LOG_FILE="$2"
+
 # Move to script location
-cd "$(dirname "$0")"
-# shellcheck source=/dev/null
-source envSetup.sh
+cd "${WORK_DIR}"
 
-# Setup logging
-export SCRIPT_LOG=${WORKDIR}/cron_pedestals.log
-# shellcheck source=/dev/null
-source logger.sh
-
+# Initiate logging - if log file larger than 1 MB then recreate
+export SCRIPT_LOG="${LOG_FILE}"
+if [ -f "${SCRIPT_LOG}" ]; then
+    LOG_SIZE="$(stat --printf='%s' "${SCRIPT_LOG}")"
+    if [ "${LOG_SIZE}" -gt 1000000 ]; then
+        rm "${SCRIPT_LOG}"
+    fi
+    touch "${SCRIPT_LOG}"
+else
+    touch "${SCRIPT_LOG}"
+fi
 SCRIPTENTRY
-INFO "Setting working directory: ${WORKDIR}"
+INFO "Setting working directory: ${WORK_DIR}"
 
 # Initial setup
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-referenceFile=${WORKDIR}/data/pedRuns_uploaded.dat
-outputFile=${WORKDIR}/data/pedsForUpload.dat
-parameterFile=${WORKDIR}/DBUtils/pedestals.par
-ctlFile=${WORKDIR}/DBUtils/pedestals.ctl
-logFile=${WORKDIR}/DBUtils/pedestals.log
-badFile=${WORKDIR}/DBUtils/pedestals.bad
+referenceFile=${WORK_DIR}/data/pedRuns_uploaded.dat
+outputFile=${WORK_DIR}/data/pedsForUpload.dat
+parameterFile=${WORK_DIR}/DBUtils/pedestals.par
+ctlFile=${WORK_DIR}/DBUtils/pedestals.ctl
+logFile=${WORK_DIR}/DBUtils/pedestals.log
+badFile=${WORK_DIR}/DBUtils/pedestals.bad
 dbgOn="false"
 
 # Help statement
@@ -62,15 +72,10 @@ readarray -t missingRuns < <( comm -23 <(printf "%s\n" "${pedRunsList[@]}") <(so
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
     INFO "Nothing to update this time! Exiting..."
     SCRIPTEXIT
-    exit 0
+    return
 else
     INFO "Will process ${#missingRuns[@]} run(s)."
 fi
-
-# Set up the environment
-# shellcheck source=/dev/null
-source /opt/offline/cmsset_default.sh
-eval "$(scramv1 runtime -sh)"
 
 # Get pedestals
 if [ -f "${outputFile}" ]; then
@@ -97,7 +102,8 @@ if [ "$dbgOn" = "false" ]; then
         echo "direct=true"
     } >> "${parameterFile}"
     # Upload them to the database
-    python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
+    DB_LOG_FILE="${LOG_DIR}/dbuploader.log"
+    python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}" -l "${DB_LOG_FILE}"
     # Update list of uploaded runs
     for run in "${missingRuns[@]}"; do
         echo "${run}" >> "${referenceFile}"
@@ -108,6 +114,4 @@ else
     DEBUG "${missingRuns[@]}"
 fi
 
-# Return to initial directory
-cd "${curDir}"
 SCRIPTEXIT
