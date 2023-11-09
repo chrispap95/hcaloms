@@ -3,8 +3,6 @@
 # Ignore warnings that are not important for bash
 # shellcheck disable=SC3000-SC4000
 
-touch "$SCRIPT_LOG"
-
 SCRIPTENTRY(){
   timeAndDate=$(date)
   script_name=$(basename "$0")
@@ -30,13 +28,11 @@ EXIT(){
   echo "[$timeAndDate] [DEBUG]  < $cfn ${FUNCNAME[0]}" >> "$SCRIPT_LOG"
 }
 
-
 INFO(){
   local msg="$1"
   timeAndDate=$(date)
   echo "[$timeAndDate] [INFO]  $msg" >> "$SCRIPT_LOG"
 }
-
 
 DEBUG(){
   local msg="$1"

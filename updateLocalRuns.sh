@@ -1,33 +1,43 @@
 #!/bin/bash -e
 #
-# updateLocalRuns.sh:
-#     This script is to be run as a cron job periodically to check for any new local runs.
+# updatePedRuns.sh:
+#     This script will check if there are new pedestal runs and update the database if necessary.
+#     A CMSSW environment should be already set up before running.
+#     Input:
+#         - $1: working directory
+#         - $2: log file
 #
 
-# Get the local setup
-curDir=$(pwd)
+# Input section
+WORK_DIR="$1"
+LOG_FILE="$2"
+
 # Move to script location
-cd "$(dirname "$0")"
-# shellcheck source=/dev/null
-source envSetup.sh
+cd "${WORK_DIR}"
 
-# Setup logging
-export SCRIPT_LOG=${WORKDIR}/cron_locals.log
-# shellcheck source=/dev/null
-source logger.sh
-
+# Initiate logging - if log file larger than 1 MB then recreate
+export SCRIPT_LOG="${LOG_FILE}"
+if [ -f "${SCRIPT_LOG}" ]; then
+    LOG_SIZE="$(stat --printf='%s' "${SCRIPT_LOG}")"
+    if [ "${LOG_SIZE}" -gt 1000000 ]; then
+        rm "${SCRIPT_LOG}"
+    fi
+    touch "${SCRIPT_LOG}"
+else
+    touch "${SCRIPT_LOG}"
+fi
 SCRIPTENTRY
-INFO "Setting working directory: ${WORKDIR}"
+INFO "Setting working directory: ${WORK_DIR}"
 
 # Initial setup
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-sqlQueryFile=${WORKDIR}/scripts/query.sql
-referenceFile=${WORKDIR}/data/localRuns_uploaded.dat
-outputFile=${WORKDIR}/data/localRunsForUpload.dat
-parameterFile=${WORKDIR}/DBUtils/localRuns.par
-ctlFile=${WORKDIR}/DBUtils/localRuns.ctl
-logFile=${WORKDIR}/DBUtils/localRuns.log
-badFile=${WORKDIR}/DBUtils/localRuns.bad
+sqlQueryFile=${WORK_DIR}/scripts/query.sql
+referenceFile=${WORK_DIR}/data/localRuns_uploaded.dat
+outputFile=${WORK_DIR}/data/localRunsForUpload.dat
+parameterFile=${WORK_DIR}/DBUtils/localRuns.par
+ctlFile=${WORK_DIR}/DBUtils/localRuns.ctl
+logFile=${WORK_DIR}/DBUtils/localRuns.log
+badFile=${WORK_DIR}/DBUtils/localRuns.bad
 dbgOn="false"
 
 # Help statement
@@ -63,15 +73,10 @@ readarray -t missingRuns < <(
 if [[ ${#missingRuns[@]} -eq 0 ]]; then
     INFO "Nothing to update this time! Exiting..."
     SCRIPTEXIT
-    exit 0
+    return
 else
     INFO "Will process ${#missingRuns[@]} run(s)."
 fi
-
-# Set up the environment
-# shellcheck source=/dev/null
-source /opt/offline/cmsset_default.sh
-eval "$(scramv1 runtime -sh)"
 
 # Process runs
 if [ -f "${outputFile}" ]; then
@@ -114,8 +119,10 @@ if [ "$dbgOn" = "false" ]; then
         echo "data=${outputFile}"
         echo "direct=true"
     } >> "${parameterFile}"
-
-    python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
+    # Upload them to the database
+    DB_LOG_FILE="${LOG_DIR}/dbuploader.log"
+    python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}" -l "${DB_LOG_FILE}"
+    # Update list of uploaded runs
     for run in "${missingRuns[@]}"; do
         echo "${run}" >> "${referenceFile}"
     done
@@ -125,6 +132,4 @@ else
     DEBUG "${missingRuns[@]}"
 fi
 
-# Return to initial directory
-cd "${curDir}"
 SCRIPTEXIT

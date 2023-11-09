@@ -79,7 +79,7 @@ sqlOut = subprocess.run(
         "sqlplus64",
         "-S",
         f"{env['DB_CMS_RCMS_USR']}/{env['DB_CMS_RCMS_PWD']}@cms_rcms",
-        f"@{env['WORKDIR']}/scripts/query.sql",
+        f"@{env['WORK_DIR']}/scripts/query.sql",
         runNum,
     ],
     capture_output=True,

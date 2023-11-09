@@ -1,23 +1,34 @@
 #!/bin/bash -e
 #
 # uploadAllPedRuns.sh
-#     Script that will upload all pedestals
+#     This script will upload all pedestals runs to the database.
+#     Input:
+#         - $1: CMSSW version
+#         - $2: log directory
 #
 
-# Get the local setup
-curDir=$(pwd)
+# Set the input variables
+CMSSW_VERSION="$1"
+LOG_DIR="$2"
+
+# Get the directories of interest
+CURRENT_DIR=$(pwd)
+export WORK_DIR="${CURRENT_DIR}"
+SCRIPT_DIR="$(dirname "$0")"
+cd "${SCRIPT_DIR}"
+
+# Set up the environment
 # shellcheck source=/dev/null
 source envSetup.sh
-echo "Setting working directory: ${WORKDIR}"
 
 # Initial settings
 localRunsDir=/data/hcaldqm/DQMIO/LOCAL
-referenceFile=${WORKDIR}/data/pedRuns_uploaded.dat
-outputFile=${WORKDIR}/data/pedsForUpload.dat
-parameterFile=${WORKDIR}/DBUtils/pedestals.par
-ctlFile=${WORKDIR}/DBUtils/pedestals.ctl
-logFile=${WORKDIR}/DBUtils/pedestals.log
-badFile=${WORKDIR}/DBUtils/pedestals.bad
+referenceFile=${SCRIPT_DIR}/data/pedRuns_uploaded.dat
+outputFile=${SCRIPT_DIR}/data/pedsForUpload.dat
+parameterFile=${SCRIPT_DIR}/DBUtils/pedestals.par
+ctlFile=${SCRIPT_DIR}/DBUtils/pedestals.ctl
+logFile=${SCRIPT_DIR}/DBUtils/pedestals.log
+badFile=${SCRIPT_DIR}/DBUtils/pedestals.bad
 DEBUG="false"
 
 # Help statement
@@ -42,12 +53,15 @@ while getopts "dh" opt; do
     esac
 done
 
-# Initial setup
-echo -n "Initial setup: "
-cd "${WORKDIR}"
+# Set up CMSSW
+echo -n "Setting up CMSSW: "
+cd "${SCRIPT_DIR}"
 # shellcheck source=/dev/null
 source /opt/offline/cmsset_default.sh
+CMSSW_PATH="../../CMSSW/${CMSSW_VERSION}"
+cd "${CMSSW_PATH}/src"
 eval "$(scramv1 runtime -sh)"
+cd "${CURRENT_DIR}"
 echo "ok"
 
 # Get all pedestal runs
@@ -61,30 +75,37 @@ echo "ok"
 TOTAL_STEPS=${#pedRunsList[@]}
 echo "Will process ${TOTAL_STEPS} runs."
 
-# Extract pedestals
+# Prepare the pedestal file
 echo "Processing ped runs: "
 if [ -f "${outputFile}" ]; then
     rm "${outputFile}"
 fi
-# Keeps track of the progress
+
+# Make a progress bar that keeps track of the progress
+BAR_LENGTH=100
+LAST_PERCENT=0
 echo -ne 'Progress: ['
+printf '%*s' $BAR_LENGTH
+echo -ne "] 0%"
 i=0
 for run in "${pedRunsList[@]}"; do
-    # Print out progress
-    #if [ $(( i % 100 )) -eq 0 ] && [ ${i} -gt 0 ]; then
-    #    echo "Processed ${i} runs..."
-    #fi
-
-    # Make a progress bar
+    # Update the progress bar only when the percentage changes
     PERCENT=$((100 * (i + 1) / TOTAL_STEPS))
-    echo -ne '\rProgress: ['
-    # Add the progress bar with '#' symbols
-    BAR_SIZE=100
-    for ((j = 0; j < ((i + 1) * BAR_SIZE / TOTAL_STEPS); j++)); do echo -ne '#'; done
-    # Fill the rest of the bar with spaces
-    for ((j = ((i + 1) * BAR_SIZE / TOTAL_STEPS); j < BAR_SIZE; j++)); do echo -ne ' '; done
-    # Add the percentage and close the progress bar
-    echo -ne "] $PERCENT%"
+    if (( PERCENT != LAST_PERCENT )); then
+        # Calculate how many '#' characters to print
+        HASHES=$((BAR_LENGTH * (i + 1) / TOTAL_STEPS))
+
+        # Prepare the progress bar string
+        progressBar=""
+        for ((j = 0; j < HASHES; j++)); do
+            progressBar+="#"
+        done
+
+        # Print the progress bar
+        printf '\rProgress: [%-*s] %d%%' "$BAR_LENGTH" "$progressBar" "$PERCENT"
+
+        LAST_PERCENT=$PERCENT
+    fi
     i=$(( i+1 ))
 
     # Run the pedestal script
@@ -110,8 +131,9 @@ if [ "$DEBUG" = "false" ]; then
     } >> "${parameterFile}"
 
     # Upload them to the database
+    DB_LOG_FILE="${LOG_DIR}/dbuploader.log"
     echo -n "Uploading pedestals to DB: "
-    python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}"
+    python3 scripts/dbuploader.py -f "${outputFile}" -p "${parameterFile}" -l "${DB_LOG_FILE}"
     echo "ok"
 
     # Update list of uploaded runs
@@ -126,5 +148,5 @@ if [ "$DEBUG" = "false" ]; then
 fi
 
 # Return to initial directory
-cd "${curDir}"
+cd "${CURRENT_DIR}"
 echo "All done!"
