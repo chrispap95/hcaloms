@@ -101,7 +101,7 @@ for run in "${runsList[@]}"; do
 
         # Print the progress bar
         printf '\rProgress: [%-*s] %d%%' "$BAR_LENGTH" "$progressBar" "$PERCENT"
-        
+
         LAST_PERCENT=$PERCENT
     fi
     i=$(( i+1 ))
